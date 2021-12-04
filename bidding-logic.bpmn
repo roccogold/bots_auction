@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:lcap="http://lcap.sh4.red" xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:bioc="http://bpmn.io/schema/bpmn/biocolor/1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="definitions_e5de68a6-2a37-492f-ac02-8160daa8e24e" targetNamespace="http://www.omg.org/spec/BPMN/20100524/MODEL" exporter="Camunda Modeler" exporterVersion="4.5.0" lcap:processType="businessProcess">
+  <process id="activity_1g4shvd" isExecutable="true">
+    <sequenceFlow id="Flow_0jlbgrg" sourceRef="startEvent_58bb2bf5-20c6-4416-9813-b9701b60e778" targetRef="Activity_1u63qas" />
+    <sequenceFlow id="Flow_1mqovwb" sourceRef="Activity_1u63qas" targetRef="Event_0jwwn3o" />
+    <intermediateCatchEvent id="Event_1q7vqba" name="Offers received">
+      <incoming>Flow_0d1xgut</incoming>
+      <outgoing>Flow_0ojxkj5</outgoing>
+      <messageEventDefinition id="MessageEventDefinition_0pfolbe" messageRef="Message_03n25nz" />
+    </intermediateCatchEvent>
+    <sequenceFlow id="Flow_0ojxkj5" sourceRef="Event_1q7vqba" targetRef="Activity_1use5h3" />
+    <serviceTask id="Activity_0rqtvkg" name="Send final results +  winners" camunda:delegateExpression="${orchesticaMessageSender}">
+      <extensionElements>
+        <camunda:field name="processChoreographyTypeKey">
+          <camunda:string>Key</camunda:string>
+        </camunda:field>
+        <camunda:field name="variables">
+          <camunda:string>winners,results</camunda:string>
+        </camunda:field>
+      </extensionElements>
+      <incoming>Flow_1pcgnc1</incoming>
+      <outgoing>Flow_0uwjrbk</outgoing>
+    </serviceTask>
+    <endEvent id="Event_03il7df" name="Bid complete">
+      <incoming>Flow_0uwjrbk</incoming>
+    </endEvent>
+    <sequenceFlow id="Flow_0uwjrbk" sourceRef="Activity_0rqtvkg" targetRef="Event_03il7df" />
+    <userTask id="Activity_1u63qas" name="Elaborate start and end time" camunda:assignee="admin">
+      <extensionElements>
+        <camunda:inputOutput>
+          <camunda:outputParameter name="startTime">
+            <camunda:script scriptFormat="Groovy">import org.camunda.spin.json.SpinJsonNode;
+import org.camunda.spin.SpinList;
+import static org.camunda.spin.Spin.*;
+
+startTime = Date.parse("yyyy-MM-dd HH:mm:ss", infoTender_startString);
+
+
+return startTime;</camunda:script>
+          </camunda:outputParameter>
+          <camunda:outputParameter name="endTime">
+            <camunda:script scriptFormat="Groovy">import org.camunda.spin.json.SpinJsonNode;
+import org.camunda.spin.SpinList;
+import static org.camunda.spin.Spin.*;
+
+
+endTime = Date.parse("yyyy-MM-dd HH:mm:ss", infoTender_endString);
+
+return endTime;</camunda:script>
+          </camunda:outputParameter>
+        </camunda:inputOutput>
+      </extensionElements>
+      <incoming>Flow_0jlbgrg</incoming>
+      <outgoing>Flow_1mqovwb</outgoing>
+    </userTask>
+    <sequenceFlow id="Flow_1pcgnc1" sourceRef="Activity_1use5h3" targetRef="Activity_0rqtvkg" />
+    <userTask id="Activity_1use5h3" name="Upload results" camunda:formKey="embedded:deployment:finalForm.html" camunda:assignee="admin">
+      <incoming>Flow_0ojxkj5</incoming>
+      <outgoing>Flow_1pcgnc1</outgoing>
+    </userTask>
+    <startEvent id="startEvent_58bb2bf5-20c6-4416-9813-b9701b60e778" name="Info received">
+      <extensionElements>
+        <camunda:properties>
+          <camunda:property />
+        </camunda:properties>
+      </extensionElements>
+      <outgoing>Flow_0jlbgrg</outgoing>
+      <messageEventDefinition id="MessageEventDefinition_05jz65f" messageRef="Message_0lwd3gg" />
+    </startEvent>
+    <sequenceFlow id="Flow_0v7ydwp" sourceRef="Activity_118ptsn" targetRef="Event_0nzg45g" />
+    <serviceTask id="Activity_118ptsn" name="Send start notification" camunda:delegateExpression="${orchesticaMessageSender}">
+      <extensionElements>
+        <camunda:field name="processChoreographyTypeKey">
+          <camunda:string>Key</camunda:string>
+        </camunda:field>
+        <camunda:field name="variables">
+          <camunda:string>startTime</camunda:string>
+        </camunda:field>
+      </extensionElements>
+      <incoming>Flow_1xucvzo</incoming>
+      <outgoing>Flow_0v7ydwp</outgoing>
+    </serviceTask>
+    <serviceTask id="Activity_1eikh2h" name="Send end notification&#10;&#10;" camunda:delegateExpression="${orchesticaMessageSender}">
+      <extensionElements>
+        <camunda:field name="processChoreographyTypeKey">
+          <camunda:string>Key</camunda:string>
+        </camunda:field>
+        <camunda:field name="variables">
+          <camunda:string>endTime</camunda:string>
+        </camunda:field>
+      </extensionElements>
+      <incoming>Flow_070miw8</incoming>
+      <outgoing>Flow_0d1xgut</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_0d1xgut" sourceRef="Activity_1eikh2h" targetRef="Event_1q7vqba" />
+    <sequenceFlow id="Flow_1xucvzo" sourceRef="Event_0jwwn3o" targetRef="Activity_118ptsn" />
+    <intermediateCatchEvent id="Event_0jwwn3o">
+      <incoming>Flow_1mqovwb</incoming>
+      <outgoing>Flow_1xucvzo</outgoing>
+      <timerEventDefinition id="TimerEventDefinition_00bxyxs">
+        <timeDate xsi:type="tFormalExpression">${startTime}</timeDate>
+      </timerEventDefinition>
+    </intermediateCatchEvent>
+    <sequenceFlow id="Flow_070miw8" sourceRef="Event_0nzg45g" targetRef="Activity_1eikh2h" />
+    <intermediateCatchEvent id="Event_0nzg45g">
+      <incoming>Flow_0v7ydwp</incoming>
+      <outgoing>Flow_070miw8</outgoing>
+      <timerEventDefinition id="TimerEventDefinition_0218yc6">
+        <timeDate xsi:type="tFormalExpression">${endTime}</timeDate>
+      </timerEventDefinition>
+    </intermediateCatchEvent>
+  </process>
+  <message id="Message_0lwd3gg" name="Key_infoTender" />
+  <message id="Message_03n25nz" name="Key_offers" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_84251691-d819-4422-9564-d1802dd4771d">
+    <bpmndi:BPMNPlane id="BPMNPlane_24185261-e703-4026-99d5-1ba24562f170" bpmnElement="activity_1g4shvd">
+      <bpmndi:BPMNEdge id="Flow_070miw8_di" bpmnElement="Flow_070miw8">
+        <di:waypoint x="848" y="100" />
+        <di:waypoint x="910" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1xucvzo_di" bpmnElement="Flow_1xucvzo">
+        <di:waypoint x="578" y="100" />
+        <di:waypoint x="640" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0d1xgut_di" bpmnElement="Flow_0d1xgut">
+        <di:waypoint x="970" y="140" />
+        <di:waypoint x="970" y="200" />
+        <di:waypoint x="190" y="200" />
+        <di:waypoint x="190" y="272" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0v7ydwp_di" bpmnElement="Flow_0v7ydwp">
+        <di:waypoint x="740" y="100" />
+        <di:waypoint x="812" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1pcgnc1_di" bpmnElement="Flow_1pcgnc1">
+        <di:waypoint x="480" y="290" />
+        <di:waypoint x="640" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0uwjrbk_di" bpmnElement="Flow_0uwjrbk">
+        <di:waypoint x="740" y="290" />
+        <di:waypoint x="952" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ojxkj5_di" bpmnElement="Flow_0ojxkj5">
+        <di:waypoint x="208" y="290" />
+        <di:waypoint x="380" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1mqovwb_di" bpmnElement="Flow_1mqovwb">
+        <di:waypoint x="480" y="100" />
+        <di:waypoint x="542" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0jlbgrg_di" bpmnElement="Flow_0jlbgrg">
+        <di:waypoint x="208" y="100" />
+        <di:waypoint x="380" y="100" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_03tlarx_di" bpmnElement="Event_1q7vqba" bioc:stroke="#000000" bioc:fill="#fff">
+        <dc:Bounds x="172" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="153" y="315" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1xtom5s_di" bpmnElement="Activity_0rqtvkg">
+        <dc:Bounds x="640" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_03il7df_di" bpmnElement="Event_03il7df" bioc:stroke="#000000" bioc:fill="#fff">
+        <dc:Bounds x="952" y="272" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="938" y="315" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0hl2zy4_di" bpmnElement="Activity_1u63qas">
+        <dc:Bounds x="380" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1pd2y5y_di" bpmnElement="Activity_1use5h3">
+        <dc:Bounds x="380" y="250" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_1n4fmmp_di" bpmnElement="startEvent_58bb2bf5-20c6-4416-9813-b9701b60e778" bioc:stroke="#000000" bioc:fill="#fff">
+        <dc:Bounds x="172" y="82" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="158" y="125" width="64" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1e5hi2c_di" bpmnElement="Activity_118ptsn">
+        <dc:Bounds x="640" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_04psfox_di" bpmnElement="Activity_1eikh2h">
+        <dc:Bounds x="910" y="60" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0ecbwk6_di" bpmnElement="Event_0jwwn3o">
+        <dc:Bounds x="542" y="82" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_0g2yofd_di" bpmnElement="Event_0nzg45g">
+        <dc:Bounds x="812" y="82" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
